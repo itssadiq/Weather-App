@@ -1,48 +1,60 @@
+import { fetchWeatherData } from "./fetch.js";
+
 const inputEl = document.querySelector(".search-input");
 const searchEl = document.querySelector(".fa-search");
-let locationHeadingEl = document.querySelector(".location");
-let temperatureEl = document.querySelector(".temperature");
-let descriptionEl = document.querySelector(".weather-description");
-let weatherIconEl = document.querySelector(".weather-icon img");
-let humidityEl = document.querySelector(".humidity-value");
+const locationHeadingEl = document.querySelector(".location");
+const temperatureEl = document.querySelector(".temperature");
+const descriptionEl = document.querySelector(".weather-description");
+const weatherIconEl = document.querySelector(".weather-icon img");
+const humidityEl = document.querySelector(".humidity-value");
+const windEl = document.querySelector(".wind");
+const feelsLikeEl = document.querySelector(".feels-like");
+const uvRays = document.querySelector(".uv-rays");
+const dateTime = document.querySelector(".date-time");
 
 inputEl.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
     let inputValue = inputEl.value;
-    fetchData(inputValue);
+
+    updateWeather(inputValue);
   }
 });
 
 searchEl.addEventListener("click", () => {
   let inputValue = inputEl.value;
 
-  fetchData(inputValue);
+  updateWeather(inputValue);
 });
 
-// let Data = "";
+async function updateWeather(cityName) {
+  const data = await fetchWeatherData(cityName);
 
-function fetchData(cityName) {
-  fetch(
-    `https://api.weatherapi.com/v1/current.json?key=b7063c358ff24027a5e155012251107&q=${cityName}&aqi=no`
-  )
-    .then((raw) => raw.json())
-    .then((data) => {
-      const city = data.location.name;
-      const country = data.location.country;
-      locationHeadingEl.innerHTML = `${city}, ${country}`;
+  const city = data.location.name;
+  const country = data.location.country;
+  const temp = data.current.temp_c;
+  const description = data.current.condition.text;
+  const icon = data.current.condition.icon;
+  const humidity = data.current.humidity;
+  const wind = data.current.wind_kph;
+  const feelsLikeCels = data.current.feelslike_c;
+  const uv = data.current.uv;
+  const timeZone = data.location.tz_id;
+  const cityDateTime = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    dateStyle: "full",
+    timeStyle: "short",
+  }).format(new Date());
+  const firstHalf = cityDateTime.slice(0, 17);
+  const secondHalf = cityDateTime.slice(27);
+  const currentDateTime = `${firstHalf} • ${secondHalf}`;
 
-      const temp = data.current.temp_c;
-      temperatureEl.innerHTML = `${temp}<span>°</span>`;
-
-      const description = data.current.condition.text;
-      descriptionEl.innerHTML = description;
-
-      const icon = data.current.condition.icon;
-      weatherIconEl.src = icon;
-
-      const humidity = data.current.humidity;
-      humidityEl.innerHTML = `${humidity}%`;
-
-      console.log(data);
-    });
+  locationHeadingEl.innerHTML = `${city}, ${country}`;
+  temperatureEl.innerHTML = `${temp}<span>°</span>`;
+  descriptionEl.innerHTML = description;
+  weatherIconEl.src = icon;
+  humidityEl.innerHTML = `${humidity}%`;
+  windEl.innerHTML = `${wind} km/h`;
+  feelsLikeEl.innerHTML = `${feelsLikeCels}°`;
+  uvRays.innerHTML = `${uv} of 10`;
+  dateTime.innerHTML = currentDateTime;
 }
