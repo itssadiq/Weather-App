@@ -1,32 +1,36 @@
 import { fetchWeatherData } from "./fetch.js";
 
-generateCurrentWeatherSection("karachi");
-generateDailyForecastSection("karachi");
+const data = await fetchWeatherData("karachi");
+
+generateCurrentWeatherSection(data);
+generateDailyForecastSection(data);
 
 const inputEl = document.querySelector(".search-input");
 const searchEl = document.querySelector(".fa-search");
 
-inputEl.addEventListener("keydown", (event) => {
+inputEl.addEventListener("keydown", async (event) => {
   if (event.key === "Enter") {
     let inputValue = inputEl.value;
 
-    generateCurrentWeatherSection(inputValue);
-    generateDailyForecastSection(inputValue);
+    const data = await fetchWeatherData(inputValue);
+
+    await generateCurrentWeatherSection(data);
+    await generateDailyForecastSection(data);
     inputEl.value = "";
   }
 });
 
-searchEl.addEventListener("click", () => {
+searchEl.addEventListener("click", async () => {
   let inputValue = inputEl.value;
 
-  generateCurrentWeatherSection(inputValue);
-  generateDailyForecastSection(inputValue);
+  const data = await fetchWeatherData(inputValue);
+
+  await generateCurrentWeatherSection(data);
+  await generateDailyForecastSection(data);
   inputEl.value = "";
 });
 
-async function generateCurrentWeatherSection(cityName) {
-  const data = await fetchWeatherData(cityName);
-
+async function generateCurrentWeatherSection(data) {
   const city = data.location.name;
   const country = data.location.country;
   const temp = Math.round(data.current.temp_c);
@@ -42,16 +46,15 @@ async function generateCurrentWeatherSection(cityName) {
     dateStyle: "full",
     timeStyle: "short",
   }).format(new Date());
-  const firstHalf = cityDateTime.slice(0, 17);
-  const secondHalf = cityDateTime.slice(27);
-  const currentDateTime = `${firstHalf} • ${secondHalf}`;
+
+  const formattedDateTime = cityDateTime.replace(/, \d{4} at /, ", ");
 
   const section = document.querySelector(".current-weather");
 
   section.innerHTML = `
     <div class="location-container">
             <h2 class="location">${city}, ${country}</h2>
-            <p class="date-time">${currentDateTime}</p>
+            <p class="date-time">${formattedDateTime}</p>
           </div>
 
           <div class="weather-main">
@@ -84,9 +87,8 @@ async function generateCurrentWeatherSection(cityName) {
   `;
 }
 
-async function generateDailyForecastSection(cityName) {
+async function generateDailyForecastSection(forecastData) {
   const foreCastEl = document.querySelector(".forecast-cards");
-  const forecastData = await fetchWeatherData(cityName);
   const foreCast = forecastData.forecast.forecastday.slice(1);
 
   let foreCastHTML = "";
@@ -97,7 +99,7 @@ async function generateDailyForecastSection(cityName) {
     const icon = element.day.condition.icon;
     const maxTemp = Math.round(element.day.maxtemp_c);
     const minTemp = Math.round(element.day.mintemp_c);
-    const date = new Date(inputDate);
+    const date = new Date(elementDate);
     const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
     const monthDate = date.toLocaleDateString("en-US", {
       month: "long",
