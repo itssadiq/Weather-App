@@ -37,9 +37,9 @@ async function generateCurrentWeatherSection(data) {
   const description = data.current.condition.text;
   const icon = data.current.condition.icon;
   const humidity = data.current.humidity;
-  const wind = data.current.wind_kph;
+  const wind = Math.round(data.current.wind_kph);
   const feelsLikeCels = Math.round(data.current.feelslike_c);
-  const uv = data.current.uv;
+  const uv = Math.round(data.current.uv);
   const timeZone = data.location.tz_id;
   const cityDateTime = new Intl.DateTimeFormat("en-US", {
     timeZone,
