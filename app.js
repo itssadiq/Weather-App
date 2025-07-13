@@ -4,6 +4,7 @@ const data = await fetchWeatherData("karachi");
 
 generateCurrentWeatherSection(data);
 generateDailyForecastSection(data);
+generateHourlyForecastSection(data);
 
 const inputEl = document.querySelector(".search-input");
 const searchEl = document.querySelector(".fa-search");
@@ -14,8 +15,9 @@ inputEl.addEventListener("keydown", async (event) => {
 
     const data = await fetchWeatherData(inputValue);
 
-    await generateCurrentWeatherSection(data);
-    await generateDailyForecastSection(data);
+    generateCurrentWeatherSection(data);
+    generateDailyForecastSection(data);
+    generateHourlyForecastSection(data);
     inputEl.value = "";
   }
 });
@@ -25,8 +27,9 @@ searchEl.addEventListener("click", async () => {
 
   const data = await fetchWeatherData(inputValue);
 
-  await generateCurrentWeatherSection(data);
-  await generateDailyForecastSection(data);
+  generateCurrentWeatherSection(data);
+  generateDailyForecastSection(data);
+  generateHourlyForecastSection(data);
   inputEl.value = "";
 });
 
@@ -124,4 +127,57 @@ async function generateDailyForecastSection(forecastData) {
   });
 
   foreCastEl.innerHTML = foreCastHTML;
+}
+
+function generateHourlyForecastSection(forecast) {
+  const timeZone = forecast.location.tz_id;
+  const cityTime = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    timeStyle: "short",
+  }).format(new Date());
+
+  const formattedCityTime = new Date(
+    "1970-01-01 " + cityTime
+  ).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  const currentHourArr = formattedCityTime.split(":");
+  const section = document.querySelector(".hourly-container");
+  const currentHour = Number(currentHourArr[0]);
+  const currentDay = forecast.forecast.forecastday[0].hour;
+  const nextDay = forecast.forecast.forecastday[1].hour;
+  const hours = [...currentDay, ...nextDay];
+  const next8Hours = hours.slice(currentHour + 1, currentHour + 9);
+
+  let sectionHTML = "";
+
+  next8Hours.forEach((element) => {
+    const time = element.time.split(" ")[1];
+    const formattedTime = new Date(
+      "1970-01-01T" + time + ":00"
+    ).toLocaleTimeString([], {
+      hour: "numeric",
+      // minute: "2-digit",
+      hour12: true,
+    });
+    const icon = element.condition.icon;
+    const temperature = Math.round(element.temp_c);
+
+    const html = `
+      <div class="hourly-card">
+        <div class="hourly-time">${formattedTime}</div>
+        <div class="hourly-icon">
+          <!-- <i class="fas fa-sun"></i> -->
+          <img src="${icon}" alt="" />
+        </div>
+        <div class="hourly-temp">${temperature}°</div>
+      </div>
+    `;
+
+    sectionHTML += html;
+  });
+
+  section.innerHTML = sectionHTML;
 }
